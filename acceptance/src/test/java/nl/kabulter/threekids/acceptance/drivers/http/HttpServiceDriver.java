@@ -12,20 +12,22 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 /**
- * Talks to the service over its public HTTP API.
+ * Talks to a fresh service over its public HTTP API.
  */
 public class HttpServiceDriver implements ServiceDriver {
 
     private final HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
     private final JsonMapper json = JsonMapper.builder().build();
+    private final ServiceContainer service;
     private final URI baseUri;
 
-    HttpServiceDriver(URI baseUri) {
-        this.baseUri = baseUri;
+    private HttpServiceDriver(ServiceContainer service) {
+        this.service = service;
+        this.baseUri = service.baseUri();
     }
 
-    public static HttpServiceDriver forServiceUnderTest() {
-        return new HttpServiceDriver(ServiceContainer.baseUri());
+    public static HttpServiceDriver onAFreshService() {
+        return new HttpServiceDriver(ServiceContainer.start());
     }
 
     @Override
@@ -36,6 +38,11 @@ public class HttpServiceDriver implements ServiceDriver {
         }
         JsonNode body = json.readTree(response.body());
         return body.path("version").asString();
+    }
+
+    @Override
+    public void close() {
+        service.close();
     }
 
     private HttpResponse<String> send(HttpRequest request) {

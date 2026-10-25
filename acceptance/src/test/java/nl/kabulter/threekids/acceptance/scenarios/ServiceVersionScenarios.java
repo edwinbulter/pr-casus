@@ -2,10 +2,12 @@ package nl.kabulter.threekids.acceptance.scenarios;
 
 import nl.kabulter.threekids.acceptance.dsl.Build;
 import nl.kabulter.threekids.acceptance.dsl.Operator;
+import org.junit.jupiter.api.AutoClose;
 import org.junit.jupiter.api.Test;
 
 class ServiceVersionScenarios {
 
+    @AutoClose
     private final Operator operator = new Operator();
 
     @Test

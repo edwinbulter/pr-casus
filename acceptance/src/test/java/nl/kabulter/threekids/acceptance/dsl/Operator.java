@@ -8,13 +8,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Someone who runs the service and wants to know which build is running.
  */
-public class Operator {
+public class Operator implements AutoCloseable {
 
     private final ServiceDriver service;
     private String reportedVersion;
 
     public Operator() {
-        this(HttpServiceDriver.forServiceUnderTest());
+        this(HttpServiceDriver.onAFreshService());
     }
 
     Operator(ServiceDriver service) {
@@ -29,5 +29,10 @@ public class Operator {
         assertThat(reportedVersion)
                 .as("version reported by the service")
                 .isEqualTo(expected);
+    }
+
+    @Override
+    public void close() {
+        service.close();
     }
 }
