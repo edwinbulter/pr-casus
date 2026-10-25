@@ -24,8 +24,11 @@ class PeopleController {
     }
 
     @PostMapping
-    ResponseEntity<List<Person>> register(@RequestBody PersonJson request) {
-        people.register(request.toPerson());
-        return ResponseEntity.status(NO_RESPONSE).build();
+    ResponseEntity<List<PersonJson>> register(@RequestBody PersonJson request) {
+        List<Person> matching = people.register(request.toPerson());
+        if (matching.isEmpty()) {
+            return ResponseEntity.status(NO_RESPONSE).build();
+        }
+        return ResponseEntity.ok(matching.stream().map(PersonJson::from).toList());
     }
 }

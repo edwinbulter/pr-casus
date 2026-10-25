@@ -5,6 +5,7 @@ import nl.kabulter.threekids.acceptance.drivers.RegistrationAnswer;
 import nl.kabulter.threekids.acceptance.drivers.ServiceDriver;
 import nl.kabulter.threekids.acceptance.drivers.http.HttpServiceDriver;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,6 +18,7 @@ public class Registry implements AutoCloseable {
 
     private final ServiceDriver service;
     private final Map<String, Long> ids = new HashMap<>();
+    private final Map<String, PersonRecord> registered = new HashMap<>();
     private RegistrationAnswer lastAnswer;
 
     private Registry(ServiceDriver service) {
@@ -29,14 +31,26 @@ public class Registry implements AutoCloseable {
     }
 
     public void register(Person person) {
-        lastAnswer = service.register(new PersonRecord(
+        PersonRecord record = new PersonRecord(
                 idOf(person.alias),
                 person.name,
                 person.birthDate,
                 idOf(person.parent1),
                 idOf(person.parent2),
                 idOf(person.partner),
-                person.children.stream().map(this::idOf).toList()));
+                person.children.stream().map(this::idOf).toList());
+        registered.put(person.alias, record);
+        lastAnswer = service.register(record);
+    }
+
+    /** The service answers that exactly these people match, with everything it knows: here, as they were registered. */
+    public void answersThatTheseMatch(String... aliases) {
+        assertThat(lastAnswer.someoneMatches())
+                .as("answer to the last registration: does someone match?")
+                .isTrue();
+        assertThat(lastAnswer.matchingPeople())
+                .as("matching people")
+                .containsExactlyInAnyOrderElementsOf(Arrays.stream(aliases).map(registered::get).toList());
     }
 
     public void answersThatNobodyMatchesYet() {

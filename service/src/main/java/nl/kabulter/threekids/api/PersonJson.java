@@ -20,9 +20,19 @@ record PersonJson(
     record Reference(long id) {
     }
 
+    static PersonJson from(Person person) {
+        return new PersonJson(person.id(), person.name(), person.birthDate(),
+                referenceTo(person.parent1()), referenceTo(person.parent2()), referenceTo(person.partner()),
+                person.children().stream().map(Reference::new).toList());
+    }
+
     Person toPerson() {
         return new Person(id, name, birthDate, idOf(parent1), idOf(parent2), idOf(partner),
                 children == null ? List.of() : children.stream().map(Reference::id).toList());
+    }
+
+    private static Reference referenceTo(Long id) {
+        return id == null ? null : new Reference(id);
     }
 
     private static Long idOf(Reference reference) {

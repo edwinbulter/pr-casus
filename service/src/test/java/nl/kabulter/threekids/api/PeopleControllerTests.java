@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -56,5 +57,25 @@ class PeopleControllerTests {
         mvc.perform(post("/api/v1/people").contentType(MediaType.APPLICATION_JSON).content(ADA))
                 .andExpect(status().is(444))
                 .andExpect(content().string(""));
+    }
+
+    @Test
+    void answers200WithEverythingKnownAboutTheMatchingPeople() throws Exception {
+        Person homer = new Person(5, null, LocalDate.of(1976, 5, 12), null, null, 4L, List.of(1L, 2L, 3L));
+        when(people.register(any())).thenReturn(List.of(homer));
+
+        mvc.perform(post("/api/v1/people").contentType(MediaType.APPLICATION_JSON).content(ADA))
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                        [{
+                          "id": 5,
+                          "name": null,
+                          "birthDate": "1976-05-12",
+                          "parent1": null,
+                          "parent2": null,
+                          "partner": { "id": 4 },
+                          "children": [{ "id": 1 }, { "id": 2 }, { "id": 3 }]
+                        }]
+                        """, JsonCompareMode.STRICT));
     }
 }

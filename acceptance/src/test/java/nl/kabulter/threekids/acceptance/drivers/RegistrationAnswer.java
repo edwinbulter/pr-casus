@@ -10,4 +10,8 @@ public record RegistrationAnswer(boolean someoneMatches, List<PersonRecord> matc
     public static RegistrationAnswer nobodyMatchesYet() {
         return new RegistrationAnswer(false, List.of());
     }
+
+    public static RegistrationAnswer matching(List<PersonRecord> people) {
+        return new RegistrationAnswer(true, List.copyOf(people));
+    }
 }
