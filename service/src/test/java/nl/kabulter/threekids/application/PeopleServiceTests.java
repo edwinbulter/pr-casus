@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PeopleServiceTests {
 
-    private static final long BART = 1, LISA = 2, MAGGIE = 3, MARGE = 4, HOMER = 5;
+    private static final long BART = 1, LISA = 2, MAGGIE = 3, MARGE = 4, HOMER = 5, LUANN = 6;
 
     private static final Clock TODAY = Clock.fixed(Instant.parse("2026-10-25T12:00:00Z"), ZoneOffset.UTC);
 
@@ -47,6 +47,16 @@ class PeopleServiceTests {
         people.register(child(LISA, LocalDate.of(2001, 5, 9)));
         people.register(child(MAGGIE, LocalDate.of(2003, 1, 12)));
         people.register(parent(MARGE, LocalDate.of(1978, 3, 19), HOMER));
+
+        assertThat(people.register(parent(HOMER, LocalDate.of(1976, 5, 12), MARGE))).isEmpty();
+    }
+
+    @Test
+    void aFamilyWhereOneChildHasAnotherSecondParentDoesNotMatch() {
+        people.register(child(BART, LocalDate.of(1999, 4, 1)));
+        people.register(child(MAGGIE, LocalDate.of(2020, 1, 12)));
+        people.register(new Person(LISA, null, LocalDate.of(2001, 5, 9), HOMER, LUANN, null, List.of()));
+        people.register(new Person(MARGE, null, LocalDate.of(1978, 3, 19), null, null, HOMER, List.of(BART, MAGGIE)));
 
         assertThat(people.register(parent(HOMER, LocalDate.of(1976, 5, 12), MARGE))).isEmpty();
     }

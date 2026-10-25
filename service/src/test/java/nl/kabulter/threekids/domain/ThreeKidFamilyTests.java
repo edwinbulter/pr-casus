@@ -15,7 +15,7 @@ class ThreeKidFamilyTests {
     private static final LocalDate TODAY = LocalDate.of(2026, 10, 25);
     private static final LocalDate ADULT = LocalDate.of(1999, 4, 1);
     private static final LocalDate MINOR = LocalDate.of(2020, 1, 12);
-    private static final long PARENT = 1, PARTNER = 2, FIRST = 3, SECOND = 4, THIRD = 5;
+    private static final long PARENT = 1, PARTNER = 2, FIRST = 3, SECOND = 4, THIRD = 5, SOMEONE_ELSE = 6;
 
     private final Map<Long, Person> known = new HashMap<>();
 
@@ -72,6 +72,30 @@ class ThreeKidFamilyTests {
     void aChildKnownOnlyByIdDoesNotCountAsUnder18() {
         knowChildren(ADULT, ADULT, MINOR);
         known.remove(THIRD);
+
+        assertThat(isMatched(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).isFalse();
+    }
+
+    @Test
+    void aChildWithAnotherSecondParentDoesNotMatch() {
+        knowChildren(ADULT, ADULT, MINOR);
+        known.put(SECOND, new Person(SECOND, null, ADULT, PARENT, SOMEONE_ELSE, null, List.of()));
+
+        assertThat(isMatched(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).isFalse();
+    }
+
+    @Test
+    void thePartnerMayBeListedAsEitherParent() {
+        knowChildren(ADULT, ADULT, MINOR);
+        known.put(SECOND, new Person(SECOND, null, ADULT, PARTNER, PARENT, null, List.of()));
+
+        assertThat(isMatched(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).isTrue();
+    }
+
+    @Test
+    void aChildKnownOnlyByIdDoesNotCountAsHavingThePartnerAsParent() {
+        knowChildren(ADULT, ADULT, MINOR);
+        known.remove(FIRST);
 
         assertThat(isMatched(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).isFalse();
     }
