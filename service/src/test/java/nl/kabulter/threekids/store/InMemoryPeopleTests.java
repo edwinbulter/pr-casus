@@ -21,4 +21,17 @@ class InMemoryPeopleTests {
 
         assertThat(people.all()).containsExactlyInAnyOrder(bart, lisa);
     }
+
+    @Test
+    void findsASavedPersonById() {
+        Person bart = new Person(1, "Bart", null, null, null, null, List.of());
+        people.save(bart);
+
+        assertThat(people.find(1)).contains(bart);
+    }
+
+    @Test
+    void findsNobodyForAnUnknownId() {
+        assertThat(people.find(1)).isEmpty();
+    }
 }

@@ -2,7 +2,7 @@
 
 A Spring Boot service for the casus "[Three-Kid Family Challenge](doc/casus.md)", built with **acceptance test-driven development (ATDD)** as described by Dave Farley in *Modern Software Engineering* and *Continuous Delivery*.
 
-> **Status:** step 0 (walking skeleton) is done: the service reports its build version, and the pipeline tests exactly the image of each commit. Phase 1: `POST /api/v1/people` answers **444** without a body when nobody matches (scenario 1), and **200** with everything known about the matching people when someone has a partner and exactly three children (scenario 2). People are kept in memory (ADR 0005). Not yet checked: that the children name the partner as parent, and that one of them is under 18 (scenarios 3 and 5 in the [plan](doc/initial-plan.md)).
+> **Status:** step 0 (walking skeleton) is done: the service reports its build version, and the pipeline tests exactly the image of each commit. Phase 1: `POST /api/v1/people` answers **444** without a body when nobody matches (scenarios 1 and 3), and **200** with everything known about the matching people when someone has a partner and exactly three children, at least one of them under 18 (scenario 2). People are kept in memory (ADR 0005); today comes from an injected clock (ADR 0006), as the date in Europe/Amsterdam (ADR 0007). Not yet checked: that the children name the partner as parent (scenario 5 in the [plan](doc/initial-plan.md)).
 
 ## What the service does
 

@@ -5,6 +5,8 @@ import nl.kabulter.threekids.domain.Person;
 import nl.kabulter.threekids.domain.ThreeKidFamily;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -14,15 +16,18 @@ import java.util.List;
 public class PeopleService {
 
     private final People people;
+    private final Clock clock;
 
-    public PeopleService(People people) {
+    public PeopleService(People people, Clock clock) {
         this.people = people;
+        this.clock = clock;
     }
 
     public List<Person> register(Person person) {
         people.save(person);
+        LocalDate today = LocalDate.now(clock);
         return people.all().stream()
-                .filter(ThreeKidFamily::isMatchedBy)
+                .filter(candidate -> ThreeKidFamily.isMatchedBy(candidate, people::find, today))
                 .toList();
     }
 }

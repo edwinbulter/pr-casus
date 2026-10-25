@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -19,6 +20,11 @@ public class InMemoryPeople implements People {
     @Override
     public void save(Person person) {
         byId.put(person.id(), person);
+    }
+
+    @Override
+    public Optional<Person> find(long id) {
+        return Optional.ofNullable(byId.get(id));
     }
 
     @Override

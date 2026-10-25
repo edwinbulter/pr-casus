@@ -30,10 +30,21 @@
         <app.version>dev</app.version>
         <image.name>three-kids</image.name>
 
+        <archunit.version>1.5.1</archunit.version>
         <jib-maven-plugin.version>3.5.2</jib-maven-plugin.version>
         <!-- Distroless Java 21, runs as non-root -->
         <jib.from.image>gcr.io/distroless/java21-debian13:nonroot@sha256:0a1f5a75661918de9c0813f287f651c3bf2d6dd752eada5f084eb0c1f14ced9e</jib.from.image>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.tngtech.archunit</groupId>
+                <artifactId>archunit-junit5</artifactId>
+                <version>${archunit.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <pluginManagement>

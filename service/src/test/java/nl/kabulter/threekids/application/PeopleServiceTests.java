@@ -4,7 +4,10 @@ import nl.kabulter.threekids.domain.Person;
 import nl.kabulter.threekids.store.InMemoryPeople;
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,7 +16,9 @@ class PeopleServiceTests {
 
     private static final long BART = 1, LISA = 2, MAGGIE = 3, MARGE = 4, HOMER = 5;
 
-    private final PeopleService people = new PeopleService(new InMemoryPeople());
+    private static final Clock TODAY = Clock.fixed(Instant.parse("2026-10-25T12:00:00Z"), ZoneOffset.UTC);
+
+    private final PeopleService people = new PeopleService(new InMemoryPeople(), TODAY);
 
     @Test
     void aPersonWithTwoChildrenDoesNotMatch() {
@@ -34,6 +39,16 @@ class PeopleServiceTests {
         Person homer = parent(HOMER, LocalDate.of(1976, 5, 12), MARGE);
 
         assertThat(people.register(homer)).containsExactlyInAnyOrder(homer, marge);
+    }
+
+    @Test
+    void aFamilyWithOnlyAdultChildrenDoesNotMatch() {
+        people.register(child(BART, LocalDate.of(1999, 4, 1)));
+        people.register(child(LISA, LocalDate.of(2001, 5, 9)));
+        people.register(child(MAGGIE, LocalDate.of(2003, 1, 12)));
+        people.register(parent(MARGE, LocalDate.of(1978, 3, 19), HOMER));
+
+        assertThat(people.register(parent(HOMER, LocalDate.of(1976, 5, 12), MARGE))).isEmpty();
     }
 
     private static Person child(long id, LocalDate birthDate) {

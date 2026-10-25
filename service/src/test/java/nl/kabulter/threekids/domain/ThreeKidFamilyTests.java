@@ -2,30 +2,95 @@ package nl.kabulter.threekids.domain;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ThreeKidFamilyTests {
 
-    private static final Long PARTNER = 2L;
+    private static final LocalDate TODAY = LocalDate.of(2026, 10, 25);
+    private static final LocalDate ADULT = LocalDate.of(1999, 4, 1);
+    private static final LocalDate MINOR = LocalDate.of(2020, 1, 12);
+    private static final long PARENT = 1, PARTNER = 2, FIRST = 3, SECOND = 4, THIRD = 5;
+
+    private final Map<Long, Person> known = new HashMap<>();
 
     @Test
-    void aPersonWithAPartnerAndThreeChildrenMatches() {
-        assertThat(ThreeKidFamily.isMatchedBy(person(PARTNER, List.of(3L, 4L, 5L)))).isTrue();
+    void aPersonWithAPartnerAndThreeChildrenOneOfThemUnder18Matches() {
+        knowChildren(ADULT, ADULT, MINOR);
+
+        assertThat(isMatched(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).isTrue();
     }
 
     @Test
     void aPersonWithoutAPartnerDoesNotMatch() {
-        assertThat(ThreeKidFamily.isMatchedBy(person(null, List.of(3L, 4L, 5L)))).isFalse();
+        knowChildren(ADULT, ADULT, MINOR);
+
+        assertThat(isMatched(parent(null, List.of(FIRST, SECOND, THIRD)))).isFalse();
     }
 
     @Test
     void aPersonWithTwoChildrenDoesNotMatch() {
-        assertThat(ThreeKidFamily.isMatchedBy(person(PARTNER, List.of(3L, 4L)))).isFalse();
+        knowChildren(ADULT, MINOR, MINOR);
+
+        assertThat(isMatched(parent(PARTNER, List.of(FIRST, SECOND)))).isFalse();
     }
 
-    private static Person person(Long partner, List<Long> children) {
-        return new Person(1, null, null, null, null, partner, children);
+    @Test
+    void aPersonWhoseChildrenAreAllAdultsDoesNotMatch() {
+        knowChildren(ADULT, ADULT, ADULT);
+
+        assertThat(isMatched(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).isFalse();
+    }
+
+    @Test
+    void aChildWhoTurns18TodayIsNoLongerUnder18() {
+        knowChildren(ADULT, ADULT, TODAY.minusYears(18));
+
+        assertThat(isMatched(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).isFalse();
+    }
+
+    @Test
+    void aChildWhoTurns18TomorrowIsStillUnder18() {
+        knowChildren(ADULT, ADULT, TODAY.minusYears(18).plusDays(1));
+
+        assertThat(isMatched(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).isTrue();
+    }
+
+    @Test
+    void aChildWithoutABirthDateDoesNotCountAsUnder18() {
+        knowChildren(ADULT, ADULT, null);
+
+        assertThat(isMatched(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).isFalse();
+    }
+
+    @Test
+    void aChildKnownOnlyByIdDoesNotCountAsUnder18() {
+        knowChildren(ADULT, ADULT, MINOR);
+        known.remove(THIRD);
+
+        assertThat(isMatched(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).isFalse();
+    }
+
+    private boolean isMatched(Person person) {
+        return ThreeKidFamily.isMatchedBy(person, id -> Optional.ofNullable(known.get(id)), TODAY);
+    }
+
+    private void knowChildren(LocalDate first, LocalDate second, LocalDate third) {
+        known.put(FIRST, child(FIRST, first));
+        known.put(SECOND, child(SECOND, second));
+        known.put(THIRD, child(THIRD, third));
+    }
+
+    private static Person child(long id, LocalDate birthDate) {
+        return new Person(id, null, birthDate, PARENT, PARTNER, null, List.of());
+    }
+
+    private static Person parent(Long partner, List<Long> children) {
+        return new Person(PARENT, null, null, null, null, partner, children);
     }
 }
