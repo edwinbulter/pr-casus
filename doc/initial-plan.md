@@ -110,7 +110,11 @@ Each scenario goes through the `atdd` iteration:
 7. **Update:** reposting an ID replaces the old data. A match can disappear through this, and stale inferred links are removed.
 8. **Response content:** a matching person who is only known by ID (no name or birth date yet) is still returned with everything that is known.
 9. **Conflicting parents** (added during scenario 6a, ADR 0008): a child whose own record names two parents is also named as a child by a third person. Today the third person also counts as a parent, because the parents are the union of both directions. ⛔ Decide what wins (for example: the child's own record), then build it as its own scenario.
-10. **Phase 2, only if time is left:** `DELETE` with an ID array removes those people. A later POST with such an ID is ignored silently, and references to ignored IDs do not count for matching. Check that the driver sends a JSON body with DELETE.
+10. **Phase 2, only if time is left:** `DELETE` with an ID array removes those people. A later POST with such an ID is ignored silently, and references to ignored IDs do not count for matching. Check that the driver sends a JSON body with DELETE. Split into two iterations:
+    - **10a. Deleting, and references to deleted IDs** (done, ADR 0011): `DELETE` answers 204; a deleted ID no longer counts as child, parent or partner, also where other records still name it, and is left out of responses. Scenario `DeletionScenarios.aDeletedPersonNoLongerCountsForMatching`.
+    - **10b. A deleted ID that is posted again is ignored** ("for both storage and matching") (done, ADR 0011):
+      - *Matching* already ignores it since 10a: the store leaves deleted IDs out of every relation, so such a POST changes no answer. An acceptance scenario for it would be green at once; it is a safety net, seen red only by sabotage.
+      - *Storage* does not ignore it yet: `InMemoryPeople.save` stores the record again, so `find` and `all()` return it. This is not visible through the API, so it is driven by a unit test on `InMemoryPeople` ("saving a deleted ID stores nothing"), which is red now.
 
 ### Domain ambiguities: ⛔ the user approves each one as a scenario before it is built
 

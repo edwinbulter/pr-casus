@@ -20,9 +20,10 @@ Phase 2 of the casus: `DELETE /api/v1/people` with an array of IDs. The service 
 
 Deleting re-evaluates the family of the deleted ID, collected before deleting (ADR 0010).
 
+4. A POST of a deleted ID is ignored silently, "for both storage and matching": `InMemoryPeople.save` stores nothing for a deleted ID, so it claims no relations either. The POST is answered as usual, with whoever matches.
+
 ## Consequences
 - The set of deleted IDs grows forever, as the casus asks ("remember them forever").
-- A POST of a deleted ID is not yet handled explicitly; that is the next scenario.
 
 ## Guard
 - Acceptance: `DeletionScenarios.aDeletedPersonNoLongerCountsForMatching`.
@@ -30,3 +31,6 @@ Deleting re-evaluates the family of the deleted ID, collected before deleting (A
 - `InMemoryPeopleTests`: a deleted person is not found, is no child or parent of anyone, and has no relations itself.
 - `EverythingKnownTests.leavesOutTheChildrenAndParentsTheRelationsNoLongerKnow`.
 - `IncrementalMatchingProperties`: random sequences now include deletions. Seen red by sabotage: the family collected after deleting, and no re-evaluation after deleting.
+- Added with the scenario "a deleted person who is registered again is ignored" (the decision is unchanged):
+  - acceptance: `DeletionScenarios.aDeletedPersonWhoIsRegisteredAgainIsIgnored`, a safety net that is green by itself; seen red by sabotage when `delete` does not remember the ID;
+  - `InMemoryPeopleTests.savingADeletedIdStoresNothing`, and `aDeletedIdThatIsSavedAgainClaimsNoRelations`, which only fails when both the guard in `save` and the filter on relations are gone.

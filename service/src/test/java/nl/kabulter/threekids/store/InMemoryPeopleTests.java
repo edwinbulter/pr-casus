@@ -135,4 +135,27 @@ class InMemoryPeopleTests {
         assertThat(people.parentsOf(1)).isEmpty();
         assertThat(people.childrenOf(1)).isEmpty();
     }
+
+    @Test
+    void savingADeletedIdStoresNothing() {
+        Person maggie = new Person(5, "Maggie", null, 1L, 2L, null, List.of());
+        people.save(maggie);
+        people.delete(5);
+
+        people.save(maggie);
+
+        assertThat(people.find(5)).isEmpty();
+        assertThat(people.all()).isEmpty();
+    }
+
+    @Test
+    void aDeletedIdThatIsSavedAgainClaimsNoRelations() {
+        Person maggie = new Person(5, "Maggie", null, 1L, 2L, null, List.of());
+        people.save(new Person(1, "Homer", null, null, null, 2L, List.of()));
+        people.delete(5);
+
+        people.save(maggie);
+
+        assertThat(people.childrenOf(1)).isEmpty();
+    }
 }

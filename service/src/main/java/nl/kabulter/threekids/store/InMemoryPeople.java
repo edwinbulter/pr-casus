@@ -30,6 +30,9 @@ public class InMemoryPeople implements People {
 
     @Override
     public synchronized void save(Person person) {
+        if (deleted.contains(person.id())) {
+            return;
+        }
         Person replaced = byId.put(person.id(), person);
         forgetClaimsOf(replaced);
         person.children().forEach(child -> remember(namedAsChildBy, child, person.id()));
