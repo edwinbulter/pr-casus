@@ -73,6 +73,24 @@ class PeopleServiceTests {
         assertThat(people.register(homer)).containsExactlyInAnyOrder(homer, marge);
     }
 
+    @Test
+    void parentsWhoDoNotNameTheirChildrenMatchWithTheChildrenWhoNameThem() {
+        people.register(child(BART, LocalDate.of(1999, 4, 1)));
+        people.register(child(LISA, LocalDate.of(2001, 5, 9)));
+        people.register(child(MAGGIE, LocalDate.of(2020, 1, 12)));
+        Person marge = new Person(MARGE, null, LocalDate.of(1978, 3, 19), null, null, HOMER, List.of());
+        Person margeWithChildren = new Person(MARGE, null, LocalDate.of(1978, 3, 19), null, null, HOMER,
+                List.of(BART, LISA, MAGGIE));
+
+        assertThat(people.register(marge)).containsExactly(margeWithChildren);
+
+        Person homer = new Person(HOMER, null, LocalDate.of(1976, 5, 12), null, null, MARGE, List.of());
+        Person homerWithChildren = new Person(HOMER, null, LocalDate.of(1976, 5, 12), null, null, MARGE,
+                List.of(BART, LISA, MAGGIE));
+
+        assertThat(people.register(homer)).containsExactlyInAnyOrder(homerWithChildren, margeWithChildren);
+    }
+
     private static Person child(long id, LocalDate birthDate) {
         return new Person(id, null, birthDate, HOMER, MARGE, null, List.of());
     }

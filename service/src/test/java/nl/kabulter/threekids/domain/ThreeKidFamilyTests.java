@@ -20,6 +20,7 @@ class ThreeKidFamilyTests {
 
     private final Map<Long, Person> known = new HashMap<>();
     private final Map<Long, Set<Long>> parents = new HashMap<>();
+    private final Map<Long, Set<Long>> children = new HashMap<>();
     private final Relations relations = new Relations() {
         @Override
         public Optional<Person> find(long id) {
@@ -29,6 +30,11 @@ class ThreeKidFamilyTests {
         @Override
         public Set<Long> parentsOf(long child) {
             return parents.getOrDefault(child, Set.of());
+        }
+
+        @Override
+        public Set<Long> childrenOf(long parent) {
+            return children.getOrDefault(parent, Set.of());
         }
     };
 
@@ -121,7 +127,17 @@ class ThreeKidFamilyTests {
         assertThat(isMatched(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).isTrue();
     }
 
+    @Test
+    void theChildrenOfAPersonAreThoseTheRelationsKnowNotOnlyThoseInItsRecord() {
+        knowChildren(ADULT, ADULT, MINOR);
+        children.put(PARENT, Set.of(FIRST, SECOND, THIRD));
+
+        assertThat(isMatched(parent(PARTNER, List.of()))).isTrue();
+    }
+
+    /** Unless a test says otherwise, the relations know the children of a person as its own record states them. */
     private boolean isMatched(Person person) {
+        children.putIfAbsent(person.id(), Set.copyOf(person.children()));
         return ThreeKidFamily.isMatchedBy(person, relations, TODAY);
     }
 

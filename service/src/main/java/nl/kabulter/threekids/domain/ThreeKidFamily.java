@@ -3,11 +3,12 @@ package nl.kabulter.threekids.domain;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * The pattern the service looks for: a person with a partner and exactly three children, who all have that partner
- * as mother or father, and at least one of whom is under 18. The parents of a child come from the relations: what
- * its own record says and who names it as a child (ADR 0008). Only children whose record is known count.
+ * as mother or father, and at least one of whom is under 18. Children and parents come from the relations: what a
+ * record says itself and what the other records say about it (ADR 0008). Only children whose record is known count.
  */
 public final class ThreeKidFamily {
 
@@ -18,10 +19,11 @@ public final class ThreeKidFamily {
     }
 
     public static boolean isMatchedBy(Person person, Relations relations, LocalDate today) {
-        if (person.partner() == null || person.children().size() != CHILDREN) {
+        Set<Long> childIds = relations.childrenOf(person.id());
+        if (person.partner() == null || childIds.size() != CHILDREN) {
             return false;
         }
-        List<Person> children = person.children().stream()
+        List<Person> children = childIds.stream()
                 .map(relations::find)
                 .flatMap(Optional::stream)
                 .toList();

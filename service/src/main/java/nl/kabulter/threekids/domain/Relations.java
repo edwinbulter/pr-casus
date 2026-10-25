@@ -12,4 +12,7 @@ public interface Relations {
 
     /** The parents of a child: those its own record names, and those who name it as their child. */
     Set<Long> parentsOf(long child);
+
+    /** The children of a person: those its own record names, and those who name it as a parent. */
+    Set<Long> childrenOf(long parent);
 }

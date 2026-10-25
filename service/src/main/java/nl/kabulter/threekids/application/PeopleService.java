@@ -1,5 +1,6 @@
 package nl.kabulter.threekids.application;
 
+import nl.kabulter.threekids.domain.EverythingKnown;
 import nl.kabulter.threekids.domain.People;
 import nl.kabulter.threekids.domain.Person;
 import nl.kabulter.threekids.domain.ThreeKidFamily;
@@ -28,6 +29,7 @@ public class PeopleService {
         LocalDate today = LocalDate.now(clock);
         return people.all().stream()
                 .filter(candidate -> ThreeKidFamily.isMatchedBy(candidate, people, today))
+                .map(match -> EverythingKnown.about(match, people))
                 .toList();
     }
 }

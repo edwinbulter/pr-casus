@@ -45,18 +45,40 @@ public class Registry implements AutoCloseable {
 
     /** The service answers that exactly these people match, with everything it knows: here, as they were registered. */
     public void answersThatTheseMatch(String... aliases) {
+        answersThatTheseMatch(Arrays.stream(aliases).map(Known::asRegistered).toArray(Known[]::new));
+    }
+
+    /** The service answers that exactly these people match, with everything it knows about them. */
+    public void answersThatTheseMatch(Known... people) {
         assertThat(lastAnswer.someoneMatches())
                 .as("answer to the last registration: does someone match?")
                 .isTrue();
-        assertThat(lastAnswer.matchingPeople())
+        assertThat(lastAnswer.matchingPeople().stream().map(Registry::withSortedChildren).toList())
                 .as("matching people")
-                .containsExactlyInAnyOrderElementsOf(Arrays.stream(aliases).map(registered::get).toList());
+                .containsExactlyInAnyOrderElementsOf(Arrays.stream(people).map(this::expected).toList());
     }
 
     public void answersThatNobodyMatchesYet() {
         assertThat(lastAnswer)
                 .as("answer to the last registration")
                 .isEqualTo(RegistrationAnswer.nobodyMatchesYet());
+    }
+
+    private PersonRecord expected(Known known) {
+        PersonRecord record = registered.get(known.alias);
+        if (known.children != null) {
+            record = new PersonRecord(record.id(), record.name(), record.birthDate(),
+                    record.parent1(), record.parent2(), record.partner(),
+                    known.children.stream().map(this::idOf).toList());
+        }
+        return withSortedChildren(record);
+    }
+
+    /** The order of the children is up to the service. */
+    private static PersonRecord withSortedChildren(PersonRecord record) {
+        return new PersonRecord(record.id(), record.name(), record.birthDate(),
+                record.parent1(), record.parent2(), record.partner(),
+                record.children().stream().sorted().toList());
     }
 
     @Override

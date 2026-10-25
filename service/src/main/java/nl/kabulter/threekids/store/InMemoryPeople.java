@@ -6,30 +6,35 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 /**
  * All person records in memory, by ID (ADR 0005). Filtering happens in Java, never in a query.
- * Records are kept as they were posted; a reverse index derives the parents of a child from who names it
- * as their child (ADR 0008).
+ * Records are kept as they were posted; two reverse indexes derive the parents of a child from who names it as their
+ * child, and the children of a parent from who names it as their parent (ADR 0008).
  */
 @Repository
 public class InMemoryPeople implements People {
 
     private final Map<Long, Person> byId = new ConcurrentHashMap<>();
     private final Map<Long, Set<Long>> namedAsChildBy = new ConcurrentHashMap<>();
+    private final Map<Long, Set<Long>> namedAsParentBy = new ConcurrentHashMap<>();
 
     @Override
     public synchronized void save(Person person) {
         Person replaced = byId.put(person.id(), person);
         if (replaced != null) {
-            replaced.children().forEach(child -> forget(child, replaced.id()));
+            replaced.children().forEach(child -> forget(namedAsChildBy, child, replaced.id()));
+            parentsIn(replaced).forEach(parent -> forget(namedAsParentBy, parent, replaced.id()));
         }
-        person.children().forEach(child ->
-                namedAsChildBy.computeIfAbsent(child, unused -> ConcurrentHashMap.newKeySet()).add(person.id()));
+        person.children().forEach(child -> remember(namedAsChildBy, child, person.id()));
+        parentsIn(person).forEach(parent -> remember(namedAsParentBy, parent, person.id()));
     }
 
     @Override
@@ -40,11 +45,15 @@ public class InMemoryPeople implements People {
     @Override
     public Set<Long> parentsOf(long child) {
         Set<Long> parents = new HashSet<>(namedAsChildBy.getOrDefault(child, Set.of()));
-        find(child).ifPresent(record -> {
-            addIfKnown(parents, record.parent1());
-            addIfKnown(parents, record.parent2());
-        });
+        find(child).ifPresent(record -> parents.addAll(parentsIn(record)));
         return parents;
+    }
+
+    @Override
+    public Set<Long> childrenOf(long parent) {
+        Set<Long> children = new HashSet<>(namedAsParentBy.getOrDefault(parent, Set.of()));
+        find(parent).ifPresent(record -> children.addAll(record.children()));
+        return children;
     }
 
     @Override
@@ -52,19 +61,21 @@ public class InMemoryPeople implements People {
         return byId.values();
     }
 
-    private void forget(long child, long parent) {
-        Set<Long> parents = namedAsChildBy.get(child);
-        if (parents != null) {
-            parents.remove(parent);
-            if (parents.isEmpty()) {
-                namedAsChildBy.remove(child);
+    private static void remember(Map<Long, Set<Long>> index, long about, long by) {
+        index.computeIfAbsent(about, unused -> ConcurrentHashMap.newKeySet()).add(by);
+    }
+
+    private static void forget(Map<Long, Set<Long>> index, long about, long by) {
+        Set<Long> claims = index.get(about);
+        if (claims != null) {
+            claims.remove(by);
+            if (claims.isEmpty()) {
+                index.remove(about);
             }
         }
     }
 
-    private static void addIfKnown(Set<Long> ids, Long id) {
-        if (id != null) {
-            ids.add(id);
-        }
+    private static List<Long> parentsIn(Person person) {
+        return Stream.of(person.parent1(), person.parent2()).filter(Objects::nonNull).toList();
     }
 }
