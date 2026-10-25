@@ -8,14 +8,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
 
 /**
  * Registers person records and answers which people currently match the three-kid family pattern.
@@ -26,8 +22,7 @@ public class PeopleService {
 
     private final People people;
     private final Clock clock;
-    private final Map<Long, LocalDate> minorUntilById = new HashMap<>();
-    private final NavigableMap<LocalDate, Set<Long>> candidatesByMinorUntil = new TreeMap<>();
+    private final MatchCandidates candidates = new MatchCandidates();
 
     public PeopleService(People people, Clock clock) {
         this.people = people;
@@ -39,11 +34,10 @@ public class PeopleService {
         addFamilyOf(person.id(), affected);
         people.save(person);
         addFamilyOf(person.id(), affected);
-        affected.forEach(this::reevaluate);
+        affected.forEach(id -> candidates.update(id,
+                people.find(id).flatMap(known -> ThreeKidFamily.minorUntil(known, people))));
 
-        LocalDate today = LocalDate.now(clock);
-        return candidatesByMinorUntil.tailMap(today, false).values().stream()
-                .flatMap(Set::stream)
+        return candidates.matchingOn(LocalDate.now(clock))
                 .map(people::find)
                 .flatMap(Optional::stream)
                 .map(match -> EverythingKnown.about(match, people))
@@ -55,22 +49,5 @@ public class PeopleService {
         affected.add(id);
         affected.addAll(people.parentsOf(id));
         people.childrenOf(id).forEach(child -> affected.addAll(people.parentsOf(child)));
-    }
-
-    private void reevaluate(long id) {
-        LocalDate previous = minorUntilById.remove(id);
-        if (previous != null) {
-            Set<Long> candidates = candidatesByMinorUntil.get(previous);
-            candidates.remove(id);
-            if (candidates.isEmpty()) {
-                candidatesByMinorUntil.remove(previous);
-            }
-        }
-        people.find(id)
-                .flatMap(person -> ThreeKidFamily.minorUntil(person, people))
-                .ifPresent(until -> {
-                    minorUntilById.put(id, until);
-                    candidatesByMinorUntil.computeIfAbsent(until, unused -> new HashSet<>()).add(id);
-                });
     }
 }

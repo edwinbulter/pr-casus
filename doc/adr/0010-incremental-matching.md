@@ -16,7 +16,7 @@ We choose **option 2** (chosen by the user).
 
 - A person's match can only change when its own record changes, when the records of its children change, or when someone names it as parent or child. So `PeopleService.register` re-evaluates the registered person, its parents, and the parents of its children, both before and after saving. Relations are looked up by ID through the reverse indexes (ADR 0008).
 - `ThreeKidFamily.minorUntil(person, relations)` gives, for a structural candidate (a partner and three known children who all have that partner as parent), the day its youngest child with a known birth date turns 18.
-- `PeopleService` keeps the candidates sorted by that day. Who matches today is a range query, compared with the clock on every answer: the age is never stored as an outcome (ADR 0006).
+- `MatchCandidates` keeps the candidates sorted by that day. Who matches today is a range query, compared with the clock on every answer: the age is never stored as an outcome (ADR 0006).
 - `register` is `synchronized`: registrations are handled one at a time, so the store and the candidates always change together.
 
 ## Consequences
