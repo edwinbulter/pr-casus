@@ -24,7 +24,7 @@ class PeopleController {
     }
 
     @PostMapping
-    ResponseEntity<List<Person>> register(@RequestBody PersonRequest request) {
+    ResponseEntity<List<Person>> register(@RequestBody PersonJson request) {
         people.register(request.toPerson());
         return ResponseEntity.status(NO_RESPONSE).build();
     }

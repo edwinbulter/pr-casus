@@ -6,9 +6,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * A person record as posted to /api/v1/people. Relatives are references: { "id": n }.
+ * A person record as posted to and returned by /api/v1/people. Relatives are references: { "id": n }.
  */
-record PersonRequest(
+record PersonJson(
         long id,
         String name,
         LocalDate birthDate,
