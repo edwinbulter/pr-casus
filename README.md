@@ -2,7 +2,7 @@
 
 A Spring Boot service for the casus "[Three-Kid Family Challenge](doc/casus.md)", built with **acceptance test-driven development (ATDD)** as described by Dave Farley in *Modern Software Engineering* and *Continuous Delivery*.
 
-> **Status:** step 0, the walking skeleton. The service reports its version (`GET /api/version`); the acceptance scenario checks it against the image of the current build, locally green. The pipeline and its first run follow ([plan](doc/initial-plan.md)).
+> **Status:** step 0 (walking skeleton) is done. The service reports its version (`GET /api/version`). The acceptance scenario checks it against the image of the current build, locally and in the pipeline, which has been seen red once in the commit stage, without an acceptance stage. Next are the phase 1 scenarios ([plan](doc/initial-plan.md)).
 
 ## What the service does
 
