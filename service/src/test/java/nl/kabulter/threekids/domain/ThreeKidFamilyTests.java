@@ -135,6 +135,40 @@ class ThreeKidFamilyTests {
         assertThat(isMatched(parent(PARTNER, List.of()))).isTrue();
     }
 
+    @Test
+    void aCandidateHasAMinorChildUntilItsYoungestChildTurns18() {
+        knowChildren(ADULT, MINOR, ADULT);
+
+        assertThat(minorUntil(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).contains(MINOR.plusYears(18));
+    }
+
+    @Test
+    void aCandidateWithOnlyAdultChildrenHadAMinorChildUntilItsYoungestChildTurned18() {
+        LocalDate youngest = ADULT.plusYears(1);
+        knowChildren(ADULT, youngest, ADULT);
+
+        assertThat(minorUntil(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).contains(youngest.plusYears(18));
+    }
+
+    @Test
+    void aCandidateWithoutAnyKnownBirthDateNeverHasAMinorChild() {
+        knowChildren(null, null, null);
+
+        assertThat(minorUntil(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).isEmpty();
+    }
+
+    @Test
+    void someoneWhoIsNoCandidateHasNoDate() {
+        knowChildren(ADULT, MINOR, ADULT);
+
+        assertThat(minorUntil(parent(null, List.of(FIRST, SECOND, THIRD)))).isEmpty();
+    }
+
+    private Optional<LocalDate> minorUntil(Person person) {
+        children.putIfAbsent(person.id(), Set.copyOf(person.children()));
+        return ThreeKidFamily.minorUntil(person, relations);
+    }
+
     /** Unless a test says otherwise, the relations know the children of a person as its own record states them. */
     private boolean isMatched(Person person) {
         children.putIfAbsent(person.id(), Set.copyOf(person.children()));

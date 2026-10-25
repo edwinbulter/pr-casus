@@ -2,7 +2,7 @@
 
 A Spring Boot service for the casus "[Three-Kid Family Challenge](doc/casus.md)", built with **acceptance test-driven development (ATDD)** as described by Dave Farley in *Modern Software Engineering* and *Continuous Delivery*.
 
-> **Status:** step 0 (walking skeleton) is done: the service reports its build version, and the pipeline tests exactly the image of each commit. Phase 1: `POST /api/v1/people` answers **200** with everything known about the matching people when someone has a partner and exactly three children who all list that partner as parent, at least one of them under 18 (scenario 2); otherwise **444** without a body (scenarios 1, 3 and 5). People are kept in memory (ADR 0005); today comes from an injected clock (ADR 0006), as the date in Europe/Amsterdam (ADR 0007). Bidirectional integrity: parent and child relations are derived in both directions from all records (ADR 0008), and a matching person is returned with everything known, including derived relations (ADR 0009). Posting a known ID again replaces the old data, and can end a match (scenario 7). Next: see the [plan](doc/initial-plan.md).
+> **Status:** step 0 (walking skeleton) is done: the service reports its build version, and the pipeline tests exactly the image of each commit. Phase 1: `POST /api/v1/people` answers **200** with everything known about the matching people when someone has a partner and exactly three children who all list that partner as parent, at least one of them under 18 (scenario 2); otherwise **444** without a body (scenarios 1, 3 and 5). People are kept in memory (ADR 0005); today comes from an injected clock (ADR 0006), as the date in Europe/Amsterdam (ADR 0007). Bidirectional integrity: parent and child relations are derived in both directions from all records (ADR 0008), and a matching person is returned with everything known, including derived relations (ADR 0009). Posting a known ID again replaces the old data, and can end a match (scenario 7). A registration only re-evaluates the family of the registered person (ADR 0010; see Performance). Next: see the [plan](doc/initial-plan.md).
 
 ## What the service does
 
@@ -46,6 +46,26 @@ The way of working is captured as [Claude Code skills](.claude/skills/), copied 
 
 The project-specific part (commands, paths, conventions, pitfalls) is the ATDD profile in [`CLAUDE.md`](CLAUDE.md). Start an iteration with `/atdd next scenario`; ask for an explanation with `/uitleg <topic>`.
 
+## Performance
+
+After each registration the service only re-evaluates the family of the registered person: the person, its parents and the parents of its children ([ADR 0010](doc/adr/0010-incremental-matching.md)). Candidates are kept sorted by the day their youngest child turns 18, so who matches today is a range query against the clock. Relations are lookups by ID in reverse indexes ([ADR 0008](doc/adr/0008-relations-are-derived-in-both-directions.md)), and everything is in memory ([ADR 0005](doc/adr/0005-person-records-in-memory.md)).
+
+Measured with `make perf`: in-process (the application service with the in-memory store, without HTTP), on a MacBook with Apple silicon. The population consists of families of five (two partners, three children); in ten families a child is under 18, so 20 people match.
+
+Each row registers that many people one by one into an empty service. The total is the time for the whole run; the average is that total divided by the number of registrations.
+
+| People registered | Before ADR 0010 (check everyone): total, average per registration | After ADR 0010 (incremental): total, average per registration |
+| ---: | ---: | ---: |
+| 10,000 | 24.8 s, 2,477 µs | 0.3 s, 29.5 µs |
+| 20,000 | 99.4 s, 4,971 µs | 0.3 s, 15.3 µs |
+| 100,000 | not measured (estimated ~40 minutes) | 1.4 s, 14.1 µs |
+
+Before, the work of a registration grew with the number of people already stored: doubling the people doubled the average and quadrupled the total, and the last registrations of a run took about twice the average. After, the average stays the same however many people are stored (the first row includes the warm-up of the JVM). Two limits remain:
+- The answer contains all matching people, as the casus asks, so building it grows with the number of people that match.
+- Registrations are handled one at a time (`synchronized`), so throughput is bounded by a single thread; HTTP and JSON add their own cost per request.
+
+The pipeline does not measure time, which is unreliable on shared CI runners. It guards the design instead: `PeopleServiceWorkTests` counts the candidates evaluated per registration, and the property test `IncrementalMatchingProperties` checks that the incremental answer equals checking everyone.
+
 ## Tech stack
 
 Java 21, Spring Boot 4, Maven, Jib (Docker image), JUnit 5, jqwik, ArchUnit, PIT, Testcontainers and GitHub Actions.
@@ -58,6 +78,7 @@ Requirements: Java 21 and Docker (or OrbStack). Maven comes with the wrapper.
 make commit-stage   # unit and integration tests
 make acceptance     # build the image three-kids:<version> with Jib and run the acceptance scenarios against it
 make run            # run the service on http://localhost:8080
+make perf           # measure the time per registration (not part of the pipeline)
 make help           # all targets
 ```
 

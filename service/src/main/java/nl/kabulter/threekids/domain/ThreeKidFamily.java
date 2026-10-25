@@ -1,7 +1,9 @@
 package nl.kabulter.threekids.domain;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -19,20 +21,31 @@ public final class ThreeKidFamily {
     }
 
     public static boolean isMatchedBy(Person person, Relations relations, LocalDate today) {
+        return minorUntil(person, relations).filter(until -> until.isAfter(today)).isPresent();
+    }
+
+    /**
+     * For a person with a partner and three known children who all have that partner as parent: the day its youngest
+     * child with a known birth date turns 18. Before that day the person matches, from that day on it does not
+     * (ADR 0010). Empty for anyone else, and when no child has a known birth date.
+     */
+    public static Optional<LocalDate> minorUntil(Person person, Relations relations) {
         Set<Long> childIds = relations.childrenOf(person.id());
         if (person.partner() == null || childIds.size() != CHILDREN) {
-            return false;
+            return Optional.empty();
         }
         List<Person> children = childIds.stream()
                 .map(relations::find)
                 .flatMap(Optional::stream)
                 .toList();
-        return children.size() == CHILDREN
-                && children.stream().allMatch(child -> relations.parentsOf(child.id()).contains(person.partner()))
-                && children.stream().anyMatch(child -> isUnder18(child, today));
-    }
-
-    private static boolean isUnder18(Person child, LocalDate today) {
-        return child.birthDate() != null && child.birthDate().plusYears(ADULT_AGE).isAfter(today);
+        if (children.size() != CHILDREN
+                || !children.stream().allMatch(child -> relations.parentsOf(child.id()).contains(person.partner()))) {
+            return Optional.empty();
+        }
+        return children.stream()
+                .map(Person::birthDate)
+                .filter(Objects::nonNull)
+                .max(Comparator.naturalOrder())
+                .map(youngest -> youngest.plusYears(ADULT_AGE));
     }
 }

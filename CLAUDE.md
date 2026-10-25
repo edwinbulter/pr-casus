@@ -24,6 +24,7 @@ New libraries or tools only with an ADR.
 - One scenario: `./mvnw -B -pl acceptance verify -DskipITs=false -Dapp.version=$(make -s version) -Dit.test=<ScenarioClass>`.
 - Which version runs: `make version` gives the version of the working tree (short commit hash, `-dirty` with uncommitted changes); `GET /api/version` gives the version of the running service.
 - Run the service: `make run` (http://localhost:8080).
+- Measure the time per registration: `make perf` (tag `perf`, excluded from the commit stage; sizes with `PERF_SIZES=10000,100000`). The README holds the results.
 - Pipeline: `gh run list --limit 3` and `gh run watch <id> --exit-status`.
 
 **Where things go**
@@ -36,6 +37,7 @@ New libraries or tools only with an ADR.
 | Domain (family graph, pattern) | `service/src/main/java/.../domain/` (no Spring) | JUnit, jqwik |
 | API and application | `service/src/main/java/.../api`, `.../application` | `@WebMvcTest`; `@SpringBootTest` with MockMvc (integration) |
 | Architecture rules | `service/src/test/java/.../architecture/` | ArchUnit |
+| Performance | `PeopleServiceWorkTests` (work per registration), `IncrementalMatchingProperties` (jqwik), `RegistrationMeasurement` (`make perf`) | commit stage, except the measurement |
 | Pipeline | `.github/workflows/ci.yml` | seen red once, then green |
 | ADR | `doc/adr/NNNN-title.md` | – |
 

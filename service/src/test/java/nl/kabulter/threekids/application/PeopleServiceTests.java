@@ -102,6 +102,28 @@ class PeopleServiceTests {
         assertThat(people.register(child(MAGGIE, LocalDate.of(2003, 1, 12)))).isEmpty();
     }
 
+    @Test
+    void aFamilyWhoseYoungestChildTurns18TodayNoLongerMatches() {
+        LocalDate today = LocalDate.now(TODAY);
+        people.register(child(BART, LocalDate.of(1999, 4, 1)));
+        people.register(child(LISA, LocalDate.of(2001, 5, 9)));
+        people.register(child(MAGGIE, today.minusYears(18)));
+        people.register(parent(MARGE, LocalDate.of(1978, 3, 19), HOMER));
+
+        assertThat(people.register(parent(HOMER, LocalDate.of(1976, 5, 12), MARGE))).isEmpty();
+    }
+
+    @Test
+    void aFamilyWhoseYoungestChildTurns18TomorrowStillMatches() {
+        LocalDate today = LocalDate.now(TODAY);
+        people.register(child(BART, LocalDate.of(1999, 4, 1)));
+        people.register(child(LISA, LocalDate.of(2001, 5, 9)));
+        people.register(child(MAGGIE, today.minusYears(18).plusDays(1)));
+        people.register(parent(MARGE, LocalDate.of(1978, 3, 19), HOMER));
+
+        assertThat(people.register(parent(HOMER, LocalDate.of(1976, 5, 12), MARGE))).hasSize(2);
+    }
+
     private static Person child(long id, LocalDate birthDate) {
         return new Person(id, null, birthDate, HOMER, MARGE, null, List.of());
     }
