@@ -34,4 +34,35 @@ class InMemoryPeopleTests {
     void findsNobodyForAnUnknownId() {
         assertThat(people.find(1)).isEmpty();
     }
+
+    @Test
+    void theParentsOfAChildAreThoseItsOwnRecordNames() {
+        people.save(new Person(3, "Bart", null, 1L, 2L, null, List.of()));
+
+        assertThat(people.parentsOf(3)).containsExactlyInAnyOrder(1L, 2L);
+    }
+
+    @Test
+    void theParentsOfAChildAlsoIncludeThoseWhoNameItAsTheirChild() {
+        people.save(new Person(3, "Bart", null, null, null, null, List.of()));
+        people.save(new Person(1, "Homer", null, null, null, 2L, List.of(3L)));
+
+        assertThat(people.parentsOf(3)).containsExactly(1L);
+    }
+
+    @Test
+    void aChildKnownOnlyByIdHasTheParentsWhoNameIt() {
+        people.save(new Person(1, "Homer", null, null, null, 2L, List.of(3L)));
+        people.save(new Person(2, "Marge", null, null, null, 1L, List.of(3L)));
+
+        assertThat(people.parentsOf(3)).containsExactlyInAnyOrder(1L, 2L);
+    }
+
+    @Test
+    void aReplacedPersonNoLongerCountsAsParentOfTheChildrenItDropped() {
+        people.save(new Person(1, "Homer", null, null, null, 2L, List.of(3L)));
+        people.save(new Person(1, "Homer", null, null, null, 2L, List.of()));
+
+        assertThat(people.parentsOf(3)).isEmpty();
+    }
 }

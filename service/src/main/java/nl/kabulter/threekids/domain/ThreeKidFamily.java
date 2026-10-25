@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * The pattern the service looks for: a person with a partner and exactly three children, who all list that partner
- * as mother or father, and at least one of whom is under 18. Only children whose record is known count: a child
- * known only by ID has no known parents and no known birth date.
+ * The pattern the service looks for: a person with a partner and exactly three children, who all have that partner
+ * as mother or father, and at least one of whom is under 18. The parents of a child come from the relations: what
+ * its own record says and who names it as a child (ADR 0008). Only children whose record is known count.
  */
 public final class ThreeKidFamily {
 
@@ -26,12 +26,8 @@ public final class ThreeKidFamily {
                 .flatMap(Optional::stream)
                 .toList();
         return children.size() == CHILDREN
-                && children.stream().allMatch(child -> hasParent(child, person.partner()))
+                && children.stream().allMatch(child -> relations.parentsOf(child.id()).contains(person.partner()))
                 && children.stream().anyMatch(child -> isUnder18(child, today));
-    }
-
-    private static boolean hasParent(Person child, Long parent) {
-        return parent.equals(child.parent1()) || parent.equals(child.parent2());
     }
 
     private static boolean isUnder18(Person child, LocalDate today) {

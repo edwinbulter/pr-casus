@@ -61,6 +61,18 @@ class PeopleServiceTests {
         assertThat(people.register(parent(HOMER, LocalDate.of(1976, 5, 12), MARGE))).isEmpty();
     }
 
+    @Test
+    void childrenWhoDoNotNameTheirParentsCountWhenTheParentsNameThem() {
+        people.register(new Person(BART, null, LocalDate.of(1999, 4, 1), null, null, null, List.of()));
+        people.register(new Person(LISA, null, LocalDate.of(2001, 5, 9), null, null, null, List.of()));
+        people.register(new Person(MAGGIE, null, LocalDate.of(2020, 1, 12), null, null, null, List.of()));
+        Person marge = parent(MARGE, LocalDate.of(1978, 3, 19), HOMER);
+        people.register(marge);
+        Person homer = parent(HOMER, LocalDate.of(1976, 5, 12), MARGE);
+
+        assertThat(people.register(homer)).containsExactlyInAnyOrder(homer, marge);
+    }
+
     private static Person child(long id, LocalDate birthDate) {
         return new Person(id, null, birthDate, HOMER, MARGE, null, List.of());
     }

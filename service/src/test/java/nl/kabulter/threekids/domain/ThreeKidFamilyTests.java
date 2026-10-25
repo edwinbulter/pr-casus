@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,6 +19,18 @@ class ThreeKidFamilyTests {
     private static final long PARENT = 1, PARTNER = 2, FIRST = 3, SECOND = 4, THIRD = 5, SOMEONE_ELSE = 6;
 
     private final Map<Long, Person> known = new HashMap<>();
+    private final Map<Long, Set<Long>> parents = new HashMap<>();
+    private final Relations relations = new Relations() {
+        @Override
+        public Optional<Person> find(long id) {
+            return Optional.ofNullable(known.get(id));
+        }
+
+        @Override
+        public Set<Long> parentsOf(long child) {
+            return parents.getOrDefault(child, Set.of());
+        }
+    };
 
     @Test
     void aPersonWithAPartnerAndThreeChildrenOneOfThemUnder18Matches() {
@@ -79,7 +92,7 @@ class ThreeKidFamilyTests {
     @Test
     void aChildWithAnotherSecondParentDoesNotMatch() {
         knowChildren(ADULT, ADULT, MINOR);
-        known.put(SECOND, new Person(SECOND, null, ADULT, PARENT, SOMEONE_ELSE, null, List.of()));
+        know(new Person(SECOND, null, ADULT, PARENT, SOMEONE_ELSE, null, List.of()));
 
         assertThat(isMatched(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).isFalse();
     }
@@ -87,7 +100,7 @@ class ThreeKidFamilyTests {
     @Test
     void thePartnerMayBeListedAsEitherParent() {
         knowChildren(ADULT, ADULT, MINOR);
-        known.put(SECOND, new Person(SECOND, null, ADULT, PARTNER, PARENT, null, List.of()));
+        know(new Person(SECOND, null, ADULT, PARTNER, PARENT, null, List.of()));
 
         assertThat(isMatched(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).isTrue();
     }
@@ -100,15 +113,28 @@ class ThreeKidFamilyTests {
         assertThat(isMatched(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).isFalse();
     }
 
+    @Test
+    void theParentsOfAChildAreThoseTheRelationsKnowNotOnlyThoseInItsRecord() {
+        knowChildren(ADULT, ADULT, MINOR);
+        known.put(THIRD, new Person(THIRD, null, MINOR, null, null, null, List.of()));
+
+        assertThat(isMatched(parent(PARTNER, List.of(FIRST, SECOND, THIRD)))).isTrue();
+    }
+
     private boolean isMatched(Person person) {
-        Relations relations = id -> Optional.ofNullable(known.get(id));
         return ThreeKidFamily.isMatchedBy(person, relations, TODAY);
     }
 
     private void knowChildren(LocalDate first, LocalDate second, LocalDate third) {
-        known.put(FIRST, child(FIRST, first));
-        known.put(SECOND, child(SECOND, second));
-        known.put(THIRD, child(THIRD, third));
+        know(child(FIRST, first));
+        know(child(SECOND, second));
+        know(child(THIRD, third));
+    }
+
+    /** A known child; the relations know its parents as its own record states them. */
+    private void know(Person child) {
+        known.put(child.id(), child);
+        parents.put(child.id(), Set.of(child.parent1(), child.parent2()));
     }
 
     private static Person child(long id, LocalDate birthDate) {

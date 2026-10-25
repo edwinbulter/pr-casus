@@ -109,7 +109,8 @@ Each scenario goes through the `atdd` iteration:
 6. **Bidirectional integrity:** the parent lists the child, and the child record does not name the parent, or the reverse. Auto-repair makes the match work anyway.
 7. **Update:** reposting an ID replaces the old data. A match can disappear through this, and stale inferred links are removed.
 8. **Response content:** a matching person who is only known by ID (no name or birth date yet) is still returned with everything that is known.
-9. **Phase 2, only if time is left:** `DELETE` with an ID array removes those people. A later POST with such an ID is ignored silently, and references to ignored IDs do not count for matching. Check that the driver sends a JSON body with DELETE.
+9. **Conflicting parents** (added during scenario 6a, ADR 0008): a child whose own record names two parents is also named as a child by a third person. Today the third person also counts as a parent, because the parents are the union of both directions. ⛔ Decide what wins (for example: the child's own record), then build it as its own scenario.
+10. **Phase 2, only if time is left:** `DELETE` with an ID array removes those people. A later POST with such an ID is ignored silently, and references to ignored IDs do not count for matching. Check that the driver sends a JSON body with DELETE.
 
 ### Domain ambiguities: ⛔ the user approves each one as a scenario before it is built
 
