@@ -1,0 +1,61 @@
+# Deployment pipeline (ADR 0002).
+# Commit stage: fast tests without a running service, and the image, built once.
+# Acceptance stage: starts exactly that image and runs the acceptance scenarios against it.
+# Actions are pinned to a commit SHA.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  commit-stage:
+    name: Commit stage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - id: version
+        run: echo "version=$(make -s version)" >> "$GITHUB_OUTPUT"
+      - run: make commit-stage
+      - run: make image VERSION=${{ steps.version.outputs.version }}
+      - run: docker save "three-kids:${{ steps.version.outputs.version }}" -o image.tar
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: image
+          path: image.tar
+          retention-days: 1
+
+  acceptance-stage:
+    name: Acceptance stage
+    needs: commit-stage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: image
+      - run: docker load -i image.tar
+      - run: make acceptance-tests VERSION=${{ needs.commit-stage.outputs.version }}

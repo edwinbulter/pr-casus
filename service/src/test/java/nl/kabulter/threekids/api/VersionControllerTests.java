@@ -1,0 +1,24 @@
+package nl.kabulter.threekids.api;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(controllers = VersionController.class, properties = "app.version=1.2.3")
+class VersionControllerTests {
+
+    @Autowired
+    MockMvc mvc;
+
+    @Test
+    void reportsTheConfiguredVersion() throws Exception {
+        mvc.perform(get("/api/version"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version").value("1.2.3"));
+    }
+}

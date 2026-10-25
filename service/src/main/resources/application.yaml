@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: three-kids
+
+app:
+  # The build version (short commit hash); the image sets APP_VERSION. Locally without it: dev.
+  version: ${APP_VERSION:dev}

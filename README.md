@@ -2,7 +2,7 @@
 
 A Spring Boot service for the casus "[Three-Kid Family Challenge](doc/casus.md)", built with **acceptance test-driven development (ATDD)** as described by Dave Farley in *Modern Software Engineering* and *Continuous Delivery*.
 
-> **Status:** project setup. The plan, the ATDD profile and the skills are in place. Next is step 0: the walking skeleton and the deployment pipeline ([plan](doc/initial-plan.md)).
+> **Status:** step 0, the walking skeleton. The service reports its version (`GET /api/version`); the acceptance scenario checks it against the image of the current build, locally green. The pipeline and its first run follow ([plan](doc/initial-plan.md)).
 
 ## What the service does
 
@@ -52,12 +52,13 @@ Java 21, Spring Boot 4, Maven, Jib (Docker image), JUnit 5, jqwik, ArchUnit, PIT
 
 ## Getting started
 
-To be added in step 0 (walking skeleton). The planned commands:
+Requirements: Java 21 and Docker (or OrbStack). Maven comes with the wrapper.
 
 ```bash
-make commit-stage   # unit and integration tests, architecture rules, mutation testing
-make image          # build the Docker image with Jib
-make acceptance     # run the acceptance scenarios against the image
+make commit-stage   # unit and integration tests
+make acceptance     # build the image three-kids:<version> with Jib and run the acceptance scenarios against it
+make run            # run the service on http://localhost:8080
+make help           # all targets
 ```
 
 ## Documentation
