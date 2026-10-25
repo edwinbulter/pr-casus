@@ -1,0 +1,16 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# macOS
+.DS_Store
+
+# Claude Code: local settings only (skills are versioned)
+.claude/settings.local.json
+
+# Casus PDF: local only, not published
+doc/Java opdracht Casus dev.pdf
