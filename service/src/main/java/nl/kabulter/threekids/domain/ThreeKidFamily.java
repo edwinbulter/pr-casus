@@ -3,7 +3,6 @@ package nl.kabulter.threekids.domain;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 
 /**
  * The pattern the service looks for: a person with a partner and exactly three children, who all list that partner
@@ -18,12 +17,12 @@ public final class ThreeKidFamily {
     private ThreeKidFamily() {
     }
 
-    public static boolean isMatchedBy(Person person, Function<Long, Optional<Person>> knownPerson, LocalDate today) {
+    public static boolean isMatchedBy(Person person, Relations relations, LocalDate today) {
         if (person.partner() == null || person.children().size() != CHILDREN) {
             return false;
         }
         List<Person> children = person.children().stream()
-                .map(knownPerson)
+                .map(relations::find)
                 .flatMap(Optional::stream)
                 .toList();
         return children.size() == CHILDREN

@@ -27,7 +27,7 @@ public class PeopleService {
         people.save(person);
         LocalDate today = LocalDate.now(clock);
         return people.all().stream()
-                .filter(candidate -> ThreeKidFamily.isMatchedBy(candidate, people::find, today))
+                .filter(candidate -> ThreeKidFamily.isMatchedBy(candidate, people, today))
                 .toList();
     }
 }

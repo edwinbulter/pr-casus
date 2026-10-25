@@ -101,7 +101,8 @@ class ThreeKidFamilyTests {
     }
 
     private boolean isMatched(Person person) {
-        return ThreeKidFamily.isMatchedBy(person, id -> Optional.ofNullable(known.get(id)), TODAY);
+        Relations relations = id -> Optional.ofNullable(known.get(id));
+        return ThreeKidFamily.isMatchedBy(person, relations, TODAY);
     }
 
     private void knowChildren(LocalDate first, LocalDate second, LocalDate third) {
