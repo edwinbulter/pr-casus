@@ -43,6 +43,11 @@ public class Registry implements AutoCloseable {
         lastAnswer = service.register(record);
     }
 
+    /** Deletes these people; the service ignores their IDs from now on. */
+    public void deletes(String... aliases) {
+        service.delete(Arrays.stream(aliases).map(this::idOf).toList());
+    }
+
     /** The service answers that exactly these people match, with everything it knows: here, as they were registered. */
     public void answersThatTheseMatch(String... aliases) {
         answersThatTheseMatch(Arrays.stream(aliases).map(Known::asRegistered).toArray(Known[]::new));

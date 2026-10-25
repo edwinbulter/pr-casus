@@ -68,6 +68,17 @@ public class HttpServiceDriver implements ServiceDriver {
     }
 
     @Override
+    public void delete(List<Long> ids) {
+        HttpResponse<String> response = send(HttpRequest.newBuilder(baseUri.resolve("/api/v1/people"))
+                .header("Content-Type", "application/json")
+                .method("DELETE", HttpRequest.BodyPublishers.ofString(json.writeValueAsString(ids)))
+                .build());
+        if (response.statusCode() != 204) {
+            throw new IllegalStateException("DELETE /api/v1/people returned " + response.statusCode() + ": " + response.body());
+        }
+    }
+
+    @Override
     public void close() {
         service.close();
     }

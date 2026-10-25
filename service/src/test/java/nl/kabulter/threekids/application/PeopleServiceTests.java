@@ -124,6 +124,31 @@ class PeopleServiceTests {
         assertThat(people.register(parent(HOMER, LocalDate.of(1976, 5, 12), MARGE))).hasSize(2);
     }
 
+    @Test
+    void aDeletedPersonNoLongerCountsForMatching() {
+        people.register(child(BART, LocalDate.of(1999, 4, 1)));
+        people.register(child(LISA, LocalDate.of(2001, 5, 9)));
+        people.register(child(MAGGIE, LocalDate.of(2020, 1, 12)));
+        people.register(parent(MARGE, LocalDate.of(1978, 3, 19), HOMER));
+
+        people.delete(List.of(MAGGIE));
+
+        assertThat(people.register(parent(HOMER, LocalDate.of(1976, 5, 12), MARGE))).isEmpty();
+    }
+
+    @Test
+    void deletingAMatchingPersonsChildEndsTheMatchOfTheOthers() {
+        people.register(child(BART, LocalDate.of(1999, 4, 1)));
+        people.register(child(LISA, LocalDate.of(2001, 5, 9)));
+        people.register(child(MAGGIE, LocalDate.of(2020, 1, 12)));
+        people.register(parent(MARGE, LocalDate.of(1978, 3, 19), HOMER));
+        people.register(parent(HOMER, LocalDate.of(1976, 5, 12), MARGE));
+
+        people.delete(List.of(BART));
+
+        assertThat(people.register(new Person(99, null, null, null, null, null, List.of()))).isEmpty();
+    }
+
     private static Person child(long id, LocalDate birthDate) {
         return new Person(id, null, birthDate, HOMER, MARGE, null, List.of());
     }

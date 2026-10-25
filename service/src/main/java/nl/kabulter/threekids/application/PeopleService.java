@@ -34,14 +34,28 @@ public class PeopleService {
         addFamilyOf(person.id(), affected);
         people.save(person);
         addFamilyOf(person.id(), affected);
-        affected.forEach(id -> candidates.update(id,
-                people.find(id).flatMap(known -> ThreeKidFamily.minorUntil(known, people))));
+        reevaluate(affected);
 
         return candidates.matchingOn(LocalDate.now(clock))
                 .map(people::find)
                 .flatMap(Optional::stream)
                 .map(match -> EverythingKnown.about(match, people))
                 .toList();
+    }
+
+    /** Deletes these people and ignores their IDs from now on (ADR 0011); their families are re-evaluated. */
+    public synchronized void delete(List<Long> ids) {
+        Set<Long> affected = new HashSet<>();
+        for (long id : ids) {
+            addFamilyOf(id, affected);
+            people.delete(id);
+        }
+        reevaluate(affected);
+    }
+
+    private void reevaluate(Set<Long> affected) {
+        affected.forEach(id -> candidates.update(id,
+                people.find(id).flatMap(known -> ThreeKidFamily.minorUntil(known, people))));
     }
 
     /** Whose match can change when this person's record changes: the person, its parents and the parents of its children. */

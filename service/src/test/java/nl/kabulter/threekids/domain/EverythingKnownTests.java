@@ -53,12 +53,27 @@ class EverythingKnownTests {
     }
 
     @Test
+    void leavesOutTheChildrenAndParentsTheRelationsNoLongerKnow() {
+        Person homer = new Person(1, "Homer", null, 10L, 11L, 2L, List.of(3L, 4L));
+        Relations relations = relations(Map.of(1L, Set.of(11L)), Map.of(1L, Set.of(4L)));
+
+        Person known = EverythingKnown.about(homer, relations);
+
+        assertThat(known.children()).containsExactly(4L);
+        assertThat(known.parent1()).isNull();
+        assertThat(known.parent2()).isEqualTo(11L);
+    }
+
+    @Test
     void keepsEverythingElseOfTheRecord() {
         Person homer = new Person(1, "Homer", java.time.LocalDate.of(1976, 5, 12), 10L, 11L, 2L, List.of());
 
-        assertThat(EverythingKnown.about(homer, relations(Map.of(), Map.of()))).isEqualTo(homer);
+        Relations relations = relations(Map.of(1L, Set.of(10L, 11L)), Map.of());
+
+        assertThat(EverythingKnown.about(homer, relations)).isEqualTo(homer);
     }
 
+    /** Like the store: the relations include what the person's own record says, unless that ID was deleted. */
     private static Relations relations(Map<Long, Set<Long>> parents, Map<Long, Set<Long>> children) {
         return new Relations() {
             @Override

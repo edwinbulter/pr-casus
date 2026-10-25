@@ -3,6 +3,7 @@ package nl.kabulter.threekids.api;
 import nl.kabulter.threekids.application.PeopleService;
 import nl.kabulter.threekids.domain.Person;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,5 +31,12 @@ class PeopleController {
             return ResponseEntity.status(NO_RESPONSE).build();
         }
         return ResponseEntity.ok(matching.stream().map(PersonJson::from).toList());
+    }
+
+    /** Phase 2: deletes these IDs and ignores them from now on (ADR 0011). */
+    @DeleteMapping
+    ResponseEntity<Void> delete(@RequestBody List<Long> ids) {
+        people.delete(ids);
+        return ResponseEntity.noContent().build();
     }
 }

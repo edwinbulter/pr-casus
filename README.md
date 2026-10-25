@@ -2,7 +2,7 @@
 
 A Spring Boot service for the casus "[Three-Kid Family Challenge](doc/casus.md)", built with **acceptance test-driven development (ATDD)** as described by Dave Farley in *Modern Software Engineering* and *Continuous Delivery*.
 
-> **Status:** step 0 (walking skeleton) is done: the service reports its build version, and the pipeline tests exactly the image of each commit. Phase 1: `POST /api/v1/people` answers **200** with everything known about the matching people when someone has a partner and exactly three children who all list that partner as parent, at least one of them under 18 (scenario 2); otherwise **444** without a body (scenarios 1, 3 and 5). People are kept in memory (ADR 0005); today comes from an injected clock (ADR 0006), as the date in Europe/Amsterdam (ADR 0007). Bidirectional integrity: parent and child relations are derived in both directions from all records (ADR 0008), and a matching person is returned with everything known, including derived relations (ADR 0009). Posting a known ID again replaces the old data, and can end a match (scenario 7). A registration only re-evaluates the family of the registered person (ADR 0010; see Performance). Next: see the [plan](doc/initial-plan.md).
+> **Status:** step 0 (walking skeleton) is done: the service reports its build version, and the pipeline tests exactly the image of each commit. Phase 1: `POST /api/v1/people` answers **200** with everything known about the matching people when someone has a partner and exactly three children who all list that partner as parent, at least one of them under 18 (scenario 2); otherwise **444** without a body (scenarios 1, 3 and 5). People are kept in memory (ADR 0005); today comes from an injected clock (ADR 0006), as the date in Europe/Amsterdam (ADR 0007). Bidirectional integrity: parent and child relations are derived in both directions from all records (ADR 0008), and a matching person is returned with everything known, including derived relations (ADR 0009). Posting a known ID again replaces the old data, and can end a match (scenario 7). A registration only re-evaluates the family of the registered person (ADR 0010; see Performance). Phase 2 has started: `DELETE /api/v1/people` deletes IDs and answers **204**; a deleted ID no longer counts for matching, also where other records still name it (ADR 0011). Next: a deleted ID that is posted again is ignored (see the [plan](doc/initial-plan.md)).
 
 ## What the service does
 
@@ -17,7 +17,7 @@ The service receives person records, one per request, and after **each** record 
 | Request | Body | Response |
 | --- | --- | --- |
 | `POST /api/v1/people` | One person: `id`, `name`, `birthDate`, `parent1`, `parent2`, `partner`, `children` (references as `{ "id": n }`) | **200 OK** with all people that currently match, with everything known about them. **444 No Response** if nobody matches yet |
-| `DELETE /api/v1/people` (phase 2) | An array of IDs, e.g. `[17, 99, 2137]` | The IDs are deleted and ignored forever, for storage and for matching |
+| `DELETE /api/v1/people` (phase 2) | An array of IDs, e.g. `[17, 99, 2137]` | **204 No Content.** The IDs are deleted and ignored forever, for storage and for matching |
 
 Rules from the casus:
 - References may point to people who have never been posted.

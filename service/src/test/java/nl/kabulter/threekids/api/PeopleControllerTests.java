@@ -16,6 +16,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -77,5 +78,13 @@ class PeopleControllerTests {
                           "children": [{ "id": 1 }, { "id": 2 }, { "id": 3 }]
                         }]
                         """, JsonCompareMode.STRICT));
+    }
+
+    @Test
+    void deletesThePeopleInTheRequestAndAnswers204() throws Exception {
+        mvc.perform(delete("/api/v1/people").contentType(MediaType.APPLICATION_JSON).content("[17, 99, 2137]"))
+                .andExpect(status().isNoContent());
+
+        verify(people).delete(List.of(17L, 99L, 2137L));
     }
 }

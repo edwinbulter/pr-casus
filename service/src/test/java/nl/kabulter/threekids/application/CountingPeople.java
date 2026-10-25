@@ -31,6 +31,11 @@ class CountingPeople implements People {
     }
 
     @Override
+    public void delete(long id) {
+        people.delete(id);
+    }
+
+    @Override
     public Collection<Person> all() {
         return people.all();
     }
