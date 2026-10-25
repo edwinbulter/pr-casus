@@ -14,3 +14,6 @@ target/
 
 # Casus PDF: local only, not published
 doc/Java opdracht Casus dev.pdf
+
+# jqwik: database of failing samples, local only
+.jqwik-database

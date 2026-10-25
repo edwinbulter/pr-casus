@@ -29,8 +29,11 @@
         <!-- The version of this build: the short commit hash, set by the Makefile. Image tag and /api/version use it. -->
         <app.version>dev</app.version>
         <image.name>three-kids</image.name>
+        <!-- Measurements (tag perf) only run with make perf -->
+        <surefire.excludedGroups>perf</surefire.excludedGroups>
 
         <archunit.version>1.5.1</archunit.version>
+        <jqwik.version>1.10.1</jqwik.version>
         <jib-maven-plugin.version>3.5.2</jib-maven-plugin.version>
         <!-- Distroless Java 21, runs as non-root -->
         <jib.from.image>gcr.io/distroless/java21-debian13:nonroot@sha256:0a1f5a75661918de9c0813f287f651c3bf2d6dd752eada5f084eb0c1f14ced9e</jib.from.image>
@@ -42,6 +45,11 @@
                 <groupId>com.tngtech.archunit</groupId>
                 <artifactId>archunit-junit5</artifactId>
                 <version>${archunit.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.jqwik</groupId>
+                <artifactId>jqwik</artifactId>
+                <version>${jqwik.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -56,7 +64,10 @@
                         <includes>
                             <include>**/*Test.java</include>
                             <include>**/*Tests.java</include>
+                            <include>**/*Properties.java</include>
+                            <include>**/*Measurement.java</include>
                         </includes>
+                        <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                     </configuration>
                 </plugin>
                 <plugin>
