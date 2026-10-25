@@ -1,0 +1,97 @@
+# Example requests for the Three-Kid Family service.
+#
+# Start the service fresh (people are kept in memory, a restart begins empty):
+#   make run                                   (Docker)
+#   ./mvnw -pl service spring-boot:run         (without Docker)
+# Then run the requests from top to bottom: each answer depends on the requests before it.
+#
+# IDs: Ada 42 (the example from the casus), Bart 101, Lisa 102, Maggie 103, Marge 104, Homer 105.
+# Only Maggie (born 2020) is under 18.
+
+@host = http://localhost:8080
+
+### 1 — Expect 444, no body: Ada (the casus example) has a partner but only two children
+POST {{host}}/api/v1/people
+Content-Type: application/json
+
+{
+  "id"       :  42,
+  "name"     : "Ada Lovelace",
+  "birthDate": "1815-12-10",
+  "parent1"  : { "id": 1 },
+  "parent2"  : { "id": 2 },
+  "partner"  : { "id": 99 },
+  "children" : [{ "id": 77 }, { "id": 78 }]
+}
+
+### 2 — Expect 444: Bart, with parents Homer and Marge
+POST {{host}}/api/v1/people
+Content-Type: application/json
+
+{ "id": 101, "name": "Bart Simpson", "birthDate": "1999-04-01", "parent1": { "id": 105 }, "parent2": { "id": 104 } }
+
+### 3 — Expect 444: Lisa, with parents Homer and Marge
+POST {{host}}/api/v1/people
+Content-Type: application/json
+
+{ "id": 102, "name": "Lisa Simpson", "birthDate": "2001-05-09", "parent1": { "id": 105 }, "parent2": { "id": 104 } }
+
+### 4 — Expect 444: Maggie (under 18), with parents Homer and Marge
+POST {{host}}/api/v1/people
+Content-Type: application/json
+
+{ "id": 103, "name": "Maggie Simpson", "birthDate": "2020-01-12", "parent1": { "id": 105 }, "parent2": { "id": 104 } }
+
+### 5 — Expect 200 with Marge: partner Homer (not registered yet), three children who name Homer as parent
+POST {{host}}/api/v1/people
+Content-Type: application/json
+
+{
+  "id": 104, "name": "Marge Simpson", "birthDate": "1978-03-19",
+  "partner": { "id": 105 },
+  "children": [{ "id": 101 }, { "id": 102 }, { "id": 103 }]
+}
+
+### 6 — Expect 200 with Homer and Marge
+POST {{host}}/api/v1/people
+Content-Type: application/json
+
+{
+  "id": 105, "name": "Homer Simpson", "birthDate": "1976-05-12",
+  "partner": { "id": 104 },
+  "children": [{ "id": 101 }, { "id": 102 }, { "id": 103 }]
+}
+
+### 7 — Expect 444: an update of Maggie makes her an adult, so no child is under 18
+POST {{host}}/api/v1/people
+Content-Type: application/json
+
+{ "id": 103, "name": "Maggie Simpson", "birthDate": "2003-01-12", "parent1": { "id": 105 }, "parent2": { "id": 104 } }
+
+### 8 — Expect 200 with Homer and Marge: Maggie's birth date corrected back
+POST {{host}}/api/v1/people
+Content-Type: application/json
+
+{ "id": 103, "name": "Maggie Simpson", "birthDate": "2020-01-12", "parent1": { "id": 105 }, "parent2": { "id": 104 } }
+
+### 9 — Expect 204: delete Maggie; her ID is ignored from now on
+DELETE {{host}}/api/v1/people
+Content-Type: application/json
+
+[103]
+
+### 10 — Expect 444: Homer still names Maggie, but a deleted ID does not count, so he has two children
+POST {{host}}/api/v1/people
+Content-Type: application/json
+
+{
+  "id": 105, "name": "Homer Simpson", "birthDate": "1976-05-12",
+  "partner": { "id": 104 },
+  "children": [{ "id": 101 }, { "id": 102 }, { "id": 103 }]
+}
+
+### 11 — Expect 444: Maggie is posted again, but a deleted ID is ignored for storage and matching
+POST {{host}}/api/v1/people
+Content-Type: application/json
+
+{ "id": 103, "name": "Maggie Simpson", "birthDate": "2020-01-12", "parent1": { "id": 105 }, "parent2": { "id": 104 } }

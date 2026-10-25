@@ -82,11 +82,22 @@ make perf           # measure the time per registration (not part of the pipelin
 make help           # all targets
 ```
 
+## Try it
+
+1. Start the service, fresh: people are kept in memory, so a restart begins empty.
+   ```bash
+   make run                              # with Docker: builds and runs the image
+   ./mvnw -pl service spring-boot:run    # without Docker
+   ```
+2. Open [`doc/requests.http`](doc/requests.http) in IntelliJ IDEA (click ▶ next to a request) or in VS Code with the REST Client extension.
+3. Run the requests from top to bottom. Each request says which answer to expect: the Simpsons are built up step by step (444, then 200 with Marge, then 200 with Homer and Marge), Maggie's birth date is updated, Maggie is deleted (204), and posting her again is ignored.
+
 ## Documentation
 
 | Document | Content |
 | --- | --- |
 | [Casus](doc/casus.md) | The assignment: pattern, rules, evaluation criteria, phase 1 and 2 |
+| [Example requests](doc/requests.http) | Requests to try the API by hand, with the expected answer per request |
 | [Initial plan](doc/initial-plan.md) | Steps, scenario backlog, domain ambiguities to decide, design and performance considerations, time box |
 | [`doc/adr/`](doc/adr) | Architecture Decision Records, written during the build |
 | [`CLAUDE.md`](CLAUDE.md) | The ATDD profile of this project |
