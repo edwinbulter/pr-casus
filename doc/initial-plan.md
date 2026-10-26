@@ -101,43 +101,49 @@ Each scenario goes through the `atdd` iteration:
 
 ### Scenario backlog, in order
 
-1. A single unknown person is posted → **444**. This scenario introduces the 444 status, using `ResponseEntity.status(444)` because 444 is not in `HttpStatus`, plus a body decision (⛔).
-2. A complete family is built through successive POSTs: a parent with a partner and 3 children, both parents on every child, one child under 18 → the last POST gets **200**, and the body contains the matching person(s).
-3. The same family, but all children are 18 or older → **444**.
-4. 2 or 4 children → **444**, for "exactly 3".
-5. One child has a different second parent → **444**.
-6. **Bidirectional integrity:** the parent lists the child, and the child record does not name the parent, or the reverse. Auto-repair makes the match work anyway.
-7. **Update:** reposting an ID replaces the old data. A match can disappear through this, and stale inferred links are removed.
-8. **Response content:** a matching person who is only known by ID (no name or birth date yet) is still returned with everything that is known.
-9. **Conflicting parents** (added during scenario 6a, ADR 0008): a child whose own record names two parents is also named as a child by a third person. Today the third person also counts as a parent, because the parents are the union of both directions. ⛔ Decide what wins (for example: the child's own record), then build it as its own scenario.
+Status per item: **done** (with its scenario and ADR), **covered** (by a unit test, no own scenario) or **open** (a deliberate choice for this submission; the reasons are in the README, section "Open points").
+
+1. A single unknown person is posted → **444**. This scenario introduces the 444 status, using `ResponseEntity.status(444)` because 444 is not in `HttpStatus`, plus a body decision (⛔). **Done:** `MatchingScenarios.aPersonWithoutAThreeKidFamilyDoesNotMatch`; 444 has no body.
+2. A complete family is built through successive POSTs: a parent with a partner and 3 children, both parents on every child, one child under 18 → the last POST gets **200**, and the body contains the matching person(s). **Done:** `MatchingScenarios.aParentWithAPartnerAndThreeChildrenOneOfThemUnder18Matches` (ADR 0005).
+3. The same family, but all children are 18 or older → **444**. **Done:** `MatchingScenarios.aThreeKidFamilyWithOnlyAdultChildrenDoesNotMatch` (ADR 0006, ADR 0007).
+4. 2 or 4 children → **444**, for "exactly 3". **Covered:** two children are already scenario 1, and "exactly 3" is in the rule with the unit test `ThreeKidFamilyTests.aPersonWithTwoChildrenDoesNotMatch`. An acceptance scenario with 4 children would be green at once, so it was skipped in favour of scenario 5. Four children have no test of their own.
+5. One child has a different second parent → **444**. **Done:** `MatchingScenarios.aThreeKidFamilyWhereOneChildHasAnotherSecondParentDoesNotMatch`.
+6. **Bidirectional integrity:** the parent lists the child, and the child record does not name the parent, or the reverse. Auto-repair makes the match work anyway. **Done** in two iterations:
+   - 6a: `IntegrityScenarios.childrenWhoDoNotNameTheirParentsStillCountWhenTheParentsNameThem` (ADR 0008);
+   - 6b: `IntegrityScenarios.parentsWhoDoNotNameTheirChildrenStillMatchWhenTheChildrenNameThem` (ADR 0009).
+7. **Update:** reposting an ID replaces the old data. A match can disappear through this, and stale inferred links are removed. **Done:** `UpdateScenarios.aCorrectedBirthDateCanEndAMatch`.
+8. **Response content:** a matching person who is only known by ID (no name or birth date yet) is still returned with everything that is known. **Open.** Today only a person with a record of its own can match, because its partner comes from its own record. Building this needs the partner decision under "Domain ambiguities" first.
+9. **Conflicting parents** (added during scenario 6a, ADR 0008): a child whose own record names two parents is also named as a child by a third person. Today the third person also counts as a parent, because the parents are the union of both directions. ⛔ Decide what wins (for example: the child's own record), then build it as its own scenario. **Open.**
 10. **Phase 2, only if time is left:** `DELETE` with an ID array removes those people. A later POST with such an ID is ignored silently, and references to ignored IDs do not count for matching. Check that the driver sends a JSON body with DELETE. Split into two iterations:
     - **10a. Deleting, and references to deleted IDs** (done, ADR 0011): `DELETE` answers 204; a deleted ID no longer counts as child, parent or partner, also where other records still name it, and is left out of responses. Scenario `DeletionScenarios.aDeletedPersonNoLongerCountsForMatching`.
-    - **10b. A deleted ID that is posted again is ignored** ("for both storage and matching") (done, ADR 0011):
-      - *Matching* already ignores it since 10a: the store leaves deleted IDs out of every relation, so such a POST changes no answer. An acceptance scenario for it would be green at once; it is a safety net, seen red only by sabotage.
-      - *Storage* does not ignore it yet: `InMemoryPeople.save` stores the record again, so `find` and `all()` return it. This is not visible through the API, so it is driven by a unit test on `InMemoryPeople` ("saving a deleted ID stores nothing"), which is red now.
+    - **10b. A deleted ID that is posted again is ignored** ("for both storage and matching") (done, ADR 0011): scenario `DeletionScenarios.aDeletedPersonWhoIsRegisteredAgainIsIgnored`.
+      - *Matching* already ignored it since 10a: the store leaves deleted IDs out of every relation, so such a POST changes no answer. The acceptance scenario was green at once; it is a safety net, seen red only by sabotage.
+      - *Storage* was driven by a unit test on `InMemoryPeople` ("saving a deleted ID stores nothing"): `save` now skips a deleted ID.
 
 ### Domain ambiguities: ⛔ the user approves each one as a scenario before it is built
 
-These are proposed defaults, not decisions:
-- **Children** are the union of the person's own `children` and the people who name this person as `parent1`/`parent2`, after bidirectional repair.
-- **Partner:** is the link symmetric? If A names B, is B's partner A? Proposed: yes, auto-repaired.
-- **Child known only by ID:** it counts toward "exactly 3" when its parents are known through the parents' records.
-- **Missing birth date:** a child without a birth date does **not** count as under 18.
-- **"All matching people":** only the people who match the pattern, not their partners or children.
-- **Ignored IDs (phase 2):** they are also removed from references in other records.
+These were proposed defaults, not decisions. The outcome is noted per item:
+- **Children** are the union of the person's own `children` and the people who name this person as `parent1`/`parent2`, after bidirectional repair. **Decided** as proposed (scenario 6, ADR 0008).
+- **Partner:** is the link symmetric? If A names B, is B's partner A? Proposed: yes, auto-repaired. **Open:** the partner is only what a person's own record says (see item 8).
+- **Child known only by ID:** proposed: it counts toward "exactly 3" when its parents are known through the parents' records. **Decided otherwise:** a child counts only when it has a record of its own, because its age and its second parent are needed for the rule (`ThreeKidFamilyTests.aChildKnownOnlyByIdDoesNotCountAsHavingThePartnerAsParent`).
+- **Missing birth date:** a child without a birth date does **not** count as under 18. **Decided** as proposed (`ThreeKidFamilyTests.aChildWithoutABirthDateDoesNotCountAsUnder18`).
+- **"All matching people":** only the people who match the pattern, not their partners or children. **Decided** as proposed (scenario 2).
+- **Ignored IDs (phase 2):** they are also removed from references in other records. **Decided** as proposed (item 10, ADR 0011).
 
 ## Design and performance (as ADR candidates, decided when a scenario asks for them)
 
-- **In-memory store:** a `ConcurrentHashMap<Long, Person>` plus an index of reverse links. It is fast, there is no SQL at all, and so the "all filtering in Java" rule holds. Writes are serialized (a lock per POST, or a single writer) to keep the graph consistent; reads are lock-free.
-- **Incremental matching:** a POST does not rescan everything. The service re-evaluates only the affected neighbourhood: the person, the partner, the parents, the children and their partners. It keeps a set of *structural* candidates (rules 1 and 2).
+- **In-memory store:** a `ConcurrentHashMap<Long, Person>` plus an index of reverse links. It is fast, there is no SQL at all, and so the "all filtering in Java" rule holds. Writes are serialized (a lock per POST, or a single writer) to keep the graph consistent; reads are lock-free. **Done:** ADR 0005 and ADR 0008; writes are `synchronized`.
+- **Incremental matching:** a POST does not rescan everything. The service re-evaluates only the affected neighbourhood: the person, the partner, the parents, the children and their partners. It keeps a set of *structural* candidates (rules 1 and 2). **Done:** ADR 0010, with candidates sorted by the day the youngest child turns 18.
 - **Time trap:** "under 18" changes as time passes without a POST. Therefore:
   - the age rule (rule 3) is applied when the response is built, against an injected `Clock`;
   - an ADR records this, guarded by an ArchUnit rule: no `LocalDate.now()` outside the clock.
-- **Domain without Spring,** guarded by ArchUnit. Pattern rules get jqwik property tests, for example "matches ⇔ brute-force check over the whole graph".
+
+  **Done:** ADR 0006 (with the ArchUnit rule) and ADR 0007.
+- **Domain without Spring,** guarded by ArchUnit. Pattern rules get jqwik property tests, for example "matches ⇔ brute-force check over the whole graph". **Partly done:** the jqwik property `IncrementalMatchingProperties` compares the incremental answer with checking everyone. The domain has no Spring dependency, but no ArchUnit rule guards that. **Open.**
 - **Fitness functions:**
-  - a concurrency test, where parallel POSTs keep integrity intact;
-  - PIT with a threshold, kept in but without letting it take over the plan;
-  - optionally a simple load measurement as a performance indication, documented in the README.
+  - a concurrency test, where parallel POSTs keep integrity intact. **Open;**
+  - PIT with a threshold, kept in but without letting it take over the plan. **Open:** sabotage was done by hand per iteration and is recorded in the commit messages;
+  - optionally a simple load measurement as a performance indication, documented in the README. **Done:** `make perf`, results in the README.
 
 ## Time box
 
@@ -145,9 +151,9 @@ The estimate is 2 hours. Priority order:
 1. step A;
 2. step B;
 3. scenarios 1–8;
-4. scenario 9 (phase 2) only if there is time.
+4. item 10 (phase 2) only if there is time. Item 9 was added to the backlog later.
 
-Record the time actually spent in the README.
+Record the time actually spent in the README. It was 5 hours.
 
 ## Verification
 

@@ -6,13 +6,13 @@ The casus "Three-Kid Family Challenge" ([doc/casus.md](doc/casus.md); the origin
 
 Werkwijze: skill `atdd` (`.claude/skills/atdd/`). This profile holds what is specific to this project.
 
-> **Step 0 (walking skeleton) is done:** the commands below are verified, locally and in CI. PIT, jqwik and ArchUnit come with their ADR.
+> **Step 0 (walking skeleton) is done:** the commands below are verified, locally and in CI. jqwik and ArchUnit came with their ADR.
 
 **Language:** English, in the code (domain terms), the scenarios, the ADRs, the docs and the commit messages. The skills `atdd` and `uitleg` are an unchanged copy from [banksim-mse](https://github.com/edwinbulter/banksim-mse) and stay in Dutch.
 
 **Stack:**
 - Java 21 and Spring Boot 4 (Maven wrapper, Jib);
-- JUnit 5, jqwik, ArchUnit, PIT and Testcontainers;
+- JUnit 5, jqwik, ArchUnit and Testcontainers;
 - GitHub Actions.
 
 New libraries or tools only with an ADR.
