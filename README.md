@@ -116,6 +116,7 @@ The casus asks for phase 1, and phase 2 if there is time; both are done. The poi
 | Document | Content |
 | --- | --- |
 | [Casus](doc/casus.md) | The assignment: pattern, rules, evaluation criteria, phase 1 and 2 |
+| [Technisch ontwerp](doc/technisch-ontwerp.md) | Technical design for newcomers: architecture, core mechanisms, tests, pipeline, decisions and open points (in Dutch) |
 | [Example requests](doc/requests.http) | Requests to try the API by hand, with the expected answer per request |
 | [Initial plan](doc/initial-plan.md) | Steps, scenario backlog, domain ambiguities to decide, design and performance considerations, time box |
 | [`doc/adr/`](doc/adr) | Architecture Decision Records, written during the build |
