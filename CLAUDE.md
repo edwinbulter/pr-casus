@@ -8,7 +8,7 @@ Werkwijze: skill `atdd` (`.claude/skills/atdd/`). This profile holds what is spe
 
 > **Step 0 (walking skeleton) is done:** the commands below are verified, locally and in CI. jqwik and ArchUnit came with their ADR.
 
-**Language:** English, in the code (domain terms), the scenarios, the ADRs, the docs and the commit messages. The skills `atdd` and `uitleg` are an unchanged copy from [banksim-mse](https://github.com/edwinbulter/banksim-mse) and stay in Dutch.
+**Language:** English, in the code (domain terms), the scenarios, the ADRs, the docs and the commit messages. The skills `atdd` and `uitleg` come from [banksim-mse](https://github.com/edwinbulter/banksim-mse) and stay in Dutch. `atdd` is an unchanged copy; `uitleg` differs in one rule: it always explains in Dutch, whatever language this profile prescribes.
 
 **Stack:**
 - Java 21 and Spring Boot 4 (Maven wrapper, Jib);
